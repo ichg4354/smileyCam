@@ -33,21 +33,6 @@ export default function App() {
   const [cameraSetting, setCameraSetting] = useState({
     side: "back",
     icon: "camera-reverse",
-    zoom: 0,
-  });
-
-  const zoomValue = new Animated.Value(0);
-  const handleZoomGesture = (e) => {
-    let value = e.nativeEvent.scale;
-    zoomValue.setValue(value);
-    const zoomScale = interpolateZoomValue;
-    console.log(zoomScale);
-    setCameraSetting({ zoom: interpolateZoomValue });
-  };
-  const interpolateZoomValue = zoomValue.interpolate({
-    inputRange: [0, 50],
-    outputRange: [0, 1],
-    extrapolate: "identity",
   });
 
   const getPremission = async () => {
@@ -75,16 +60,11 @@ export default function App() {
   if (premission === true) {
     return (
       <Container>
-        <PinchGestureHandler onGestureEvent={handleZoomGesture}>
-          <Animated.View>
             <Camera
               style={{ width: WIDTH - 30, height: HEIGHT / 1.5 }}
               type={cameraSetting.side}
-              zoom={JSON.stringify(cameraSetting.zoom)}
+              zoom={cameraSetting.zoom}
             />
-          </Animated.View>
-        </PinchGestureHandler>
-        <IconContainer>
           <TouchableOpacity onPress={handleCameraSideChangeBtnClick}>
             <Ionicons name={cameraSetting.icon} size={50} color="black" />
           </TouchableOpacity>
