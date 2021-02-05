@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import styled from "styled-components";
 import { LinearGradient } from "expo-linear-gradient";
 import * as FaceDetector from "expo-face-detector";
+import * as MediaLibrary from "expo-media-library";
 
 const Container = styled.View`
   flex: 1;
@@ -34,13 +35,14 @@ export default function App() {
   const [cameraSetting, setCameraSetting] = useState({
     side: "back",
     icon: "camera-reverse",
-    smile: false,
+    smile: null,
   });
   const camera = useRef();
 
   const getPremission = async () => {
     try {
       const { status } = await Camera.requestPermissionsAsync();
+      await MediaLibrary.requestPermissionsAsync();
       setPremission(true);
     } catch (error) {
       console.log(error);
@@ -66,18 +68,39 @@ export default function App() {
 
   const takePicture = async () => {
     let photo = await camera.current.takePictureAsync();
-    console.log(photo);
+    setTimeout(
+      () =>
+        setCameraSetting({
+          side: cameraSetting.side,
+          icon: cameraSetting.icon,
+          smile: false,
+        }),
+      2000
+    );
+    savePicture(photo);
   };
 
+  const savePicture = async ({ uri }) => {
+    let asset = await MediaLibrary.createAssetAsync(uri);
+    if ((await MediaLibrary.getAlbumAsync("SMILE")) === null) {
+      console.log("null");
+      const library = await MediaLibrary.createAlbumAsync("SMILE");
+      console.log(library.id);
+      await MediaLibrary.addAssetsToAlbumAsync([asset], library.id);
+    } else {
+      const library = await MediaLibrary.getAlbumAsync("SMILE");
+      console.log(library.id);
+      await MediaLibrary.addAssetsToAlbumAsync([asset], library.id);
+    }
+  };
   const handleFaceDetection = (face) => {
     const smilingProbability = face?.faces[0]?.smilingProbability;
     if (smilingProbability >= 0.7) {
       setCameraSetting({
-        smile: true,
         side: cameraSetting.side,
         icon: cameraSetting.icon,
+        smile: true,
       });
-      console.log("SMILEing");
       takePicture();
     }
   };
@@ -116,7 +139,6 @@ export default function App() {
               minDetectionInterval: 100,
               tracking: true,
             }}
-            onMountError={(e) => console.log(e)}
             ref={camera}
           />
           <IconContainer>
