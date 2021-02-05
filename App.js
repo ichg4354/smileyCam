@@ -2,12 +2,11 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   Dimensions,
+  Platform,
   StyleSheet,
   Text,
   TouchableOpacity,
-  View,
 } from "react-native";
 import { Camera } from "expo-camera";
 import { Ionicons } from "@expo/vector-icons";
@@ -82,15 +81,16 @@ export default function App() {
 
   const savePicture = async ({ uri }) => {
     let asset = await MediaLibrary.createAssetAsync(uri);
-    if ((await MediaLibrary.getAlbumAsync("SMILE")) === null) {
+    let Album = await MediaLibrary.getAlbumAsync("SMILE");
+    if (Album === null) {
       console.log("null");
-      const library = await MediaLibrary.createAlbumAsync("SMILE");
-      console.log(library.id);
+      const library = await MediaLibrary.createAlbumAsync(
+        "SMILE",
+        Platform.OS !== "ios" ? asset : null
+      );
       await MediaLibrary.addAssetsToAlbumAsync([asset], library.id);
     } else {
-      const library = await MediaLibrary.getAlbumAsync("SMILE");
-      console.log(library.id);
-      await MediaLibrary.addAssetsToAlbumAsync([asset], library.id);
+      await MediaLibrary.addAssetsToAlbumAsync([asset], Album.id);
     }
   };
   const handleFaceDetection = (face) => {
